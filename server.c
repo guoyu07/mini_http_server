@@ -1,13 +1,27 @@
 #include "server.h"
 
 /**
+ * show help
+ */
+static int show_help()
+{
+    fprintf(stderr, "\n********* Http Mini Server **********\n\n");
+    fprintf(stderr, "Usage: ./server [OPTION] ...\n\n");
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "-D, --is_debig      Is open debug mode, default No\n");
+    fprintf(stderr, "-p, --port=PORT     Server listen port, default 80\n");
+    fprintf(stderr, "-l, --is_log        Is write access log, default No\n");
+    fprintf(stderr, "\n*************************************\n");
+}
+
+/**
  * parse options
  */
 static int parse_options(int argc, char **argv)
 {
     int opt;
     struct option longopts[] = {
-        {"is_debug",    0,  NULL,   'd'},
+        {"is_debug",    0,  NULL,   'D'},
         {"port",        1,  NULL,   'p'},
         {"is_log",      0,  NULL,   'l'},
         {NULL,          0,  NULL,     0}
@@ -15,7 +29,7 @@ static int parse_options(int argc, char **argv)
     
     while (-1 != (opt = getopt_long(argc, argv, "dp:l", longopts, NULL))) {
         switch (opt) {
-            case 'd':
+            case 'D':
                 g_is_debug = 1;
                 break;
             case 'p':
@@ -29,8 +43,7 @@ static int parse_options(int argc, char **argv)
                 g_is_log = 1;
                 break;
             default:
-                printf("h\n");
-                //TODO printf usage
+                show_help();
         }
     }
 
