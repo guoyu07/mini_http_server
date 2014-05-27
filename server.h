@@ -10,6 +10,8 @@
 #include <getopt.h>
 
 #define MAX_LINE                4096
+#define BUFFER_SIZE				8192
+#define REQUEST_MAX_SIZE		10240
 #define DEFAULT_DOCUMENT_ROOT   "./"
 #define DEFAULT_LOG_PATH        "/tmp/mini_server.log"
 

@@ -1,5 +1,10 @@
 #include "server.h"
 
+int send_header()
+{
+    
+}
+
 /**
  * show help
  */
@@ -46,6 +51,45 @@ static int parse_options(int argc, char **argv)
     return 0;
 }
 
+static int request_header(int client_sock)
+{
+    printf("request_header\n");
+
+    char buf[BUFFER_SIZE], buf_all[BUFFER_SIZE];
+
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "HTTP/1.1 200 OK\r\n");
+    strcat(buf_all, buf);
+
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "Cache-Control: private, max-age=0\r\n");
+    strcat(buf_all, buf);
+
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "Content-Type: text/html; charset=UTF-8\r\n");
+    strcat(buf_all, buf);
+
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "Connection: close\r\n\r\n");
+    strcat(buf_all, buf);
+
+    printf("\n%s\n", buf_all);
+
+    write(client_sock, buf_all, strlen(buf_all));
+
+    return 0;
+}
+
+
+static void handle_client(int client_sock, struct sockaddr_in client_addr)
+{
+    request_header(client_sock);
+
+    close(client_sock);
+
+    exit(0);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -87,15 +131,15 @@ int main(int argc, char **argv)
             return -1;
         }
 
-        char *headers = "Content-Type:text/html; charset=utf-8\r\n";
+        if (0 == fork()) {
+            handle_client(client_sock, client_addr);
 
-        send(client_sock, headers, 2048, 0);
-        send(client_sock, "Hello Server\n", 2048, 0);
-
-        printf("Connection Success\n");
-
-
-        close(client_sock);
+            close(client_sock);
+            printf("client_sock close\n");
+            exit(0);
+        } else {
+            wait(NULL);
+        }
     }
 
     return 0;
