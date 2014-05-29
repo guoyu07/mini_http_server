@@ -51,14 +51,25 @@ static int parse_options(int argc, char **argv)
     return 0;
 }
 
-static int request_header(int client_sock)
+static int response_header(int client_sock, int http_code)
 {
-    printf("request_header\n");
+    time_t now;
+    char buf[BUFFER_SIZE], buf_all[BUFFER_SIZE], timebuf[100];
 
-    char buf[BUFFER_SIZE], buf_all[BUFFER_SIZE];
+    memset(buf_all, 0, strlen(buf_all));
 
     memset(buf, 0, strlen(buf));
-    sprintf(buf, "HTTP/1.1 200 OK\r\n");
+    sprintf(buf, "HTTP/1.1 %d OK\r\n", http_code);
+    strcat(buf_all, buf);
+
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "Server: %s\r\n", SERVER_NAME);
+    strcat(buf_all, buf);
+
+    now = time((time_t *)0);
+    strftime(timebuf, sizeof(timebuf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
+    memset(buf, 0, strlen(buf));
+    sprintf(buf, "Date: %s\r\n", timebuf);
     strcat(buf_all, buf);
 
     memset(buf, 0, strlen(buf));
@@ -68,6 +79,10 @@ static int request_header(int client_sock)
     memset(buf, 0, strlen(buf));
     sprintf(buf, "Content-Type: text/html; charset=UTF-8\r\n");
     strcat(buf_all, buf);
+
+    // memset(buf, 0, strlen(buf));
+    // sprintf(buf, "Content-Length: %d\r\n", 100);        
+    // strcat(buf_all, buf);
 
     memset(buf, 0, strlen(buf));
     sprintf(buf, "Connection: close\r\n\r\n");
@@ -80,14 +95,34 @@ static int request_header(int client_sock)
     return 0;
 }
 
+parse_request(int client_sock)
+{
+    char request_buf[REQUEST_MAX_SIZE];
+
+    if (read(client_sock, request_buf, REQUEST_MAX_SIZE) < 0) {
+        //TODO 接收参数错误
+        printf("Read sock error\n");
+    }
+
+    if (IS_DEBUG) {
+        printf("Receive request:\n%s\n", request_buf);        
+    }
+
+    
+
+
+}
+
 
 static void handle_client(int client_sock, struct sockaddr_in client_addr)
 {
-    request_header(client_sock);
+    parse_request(client_sock);
 
-    close(client_sock);
 
-    exit(0);
+
+    // response_header(client_sock, 200);
+
+    // close(client_sock);
 }
 
 
@@ -131,15 +166,19 @@ int main(int argc, char **argv)
             return -1;
         }
 
-        if (0 == fork()) {
-            handle_client(client_sock, client_addr);
+        handle_client(client_sock, client_addr);
+        close(client_sock);
+            // printf("client_sock close\n");
 
-            close(client_sock);
-            printf("client_sock close\n");
-            exit(0);
-        } else {
-            wait(NULL);
-        }
+        // if (0 == fork()) {
+        //     handle_client(client_sock, client_addr);
+
+        //     close(client_sock);
+        //     printf("client_sock close\n");
+        //     exit(0);
+        // } else {
+        //     wait(NULL);
+        // }
     }
 
     return 0;
